@@ -9,7 +9,7 @@ LIBS = $(OPENCV)
 all: $(PROG)
 
 $(PROG):$(SRCS)
-	$(CC) $(CFLAGS) -o $(PROG) $(SRCS) $(LIBS)
+	$(CC) $(CFLAGS) -o $(PROG) $(SRCS) $(LIBS) -lv4l2
 
 clean:
 	$(RM) *.o

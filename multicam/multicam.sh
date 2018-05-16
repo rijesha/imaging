@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ----------------------------------------------------------------------------------
-# Usage: ./multicam.sh [SETUP FILE] [CAM SET] [CAM NUM] [FULL MODE]
+# Usage: ./multicam.sh [SETUP FILE] [CAM SET] [CAM START IND] [CAM END IND] [FULL MODE]
 #
 # [SETUP FILE]      name of the json setup file to use without extension. Check
 #                   setup files (.json) in 'setup' folder
@@ -28,9 +28,12 @@
 
 SETUP=$1
 CAMSET=$2
-CAMNUM=$3
+CAMSTART=$3
+CAMEND=$4
+CAMNUM=CAMEND-CAMSTART
+CAMNUM=$((CAMNUM+1))
 
-if [ -z "$4" ]; then
+if [ -z "$5" ]; then
     FULLMODE="1"
 else
     FULLMODE="$4"
@@ -43,10 +46,11 @@ FOLDER=./sessions/${TIMESTAMP}
 # ==================================================================================
 # LOAD CAMERA USB ID FROM 'cameraList.json' FILE
 # ==================================================================================
-for ((i=1; i<=$CAMNUM; i++));
+j=0
+for ((i=$CAMSTART; i<=$CAMEND; i++));
 do
-    j=$((i-1))
     DEVICE[$j]="$( jq -r ".camera_array[$CAMSET].cam$i" "setup/cameraList.json" )"
+    j=$((j+1))
 done
 
 # ==================================================================================
@@ -99,7 +103,7 @@ do
         TEMP="$( ./gst_builder.sh ${DEVICE[$i]} ${WIDTH} ${HEIGHT} ${FORMAT} ${PICFORMAT} ${FPS} ${FRATEIN} )"
 
         # define output file location and file names
-        OUTPUT="${FOLDER}/${TIMESTAMP}\_frame_%04d_cam_$((i+1)).${PICFORMAT}"
+        OUTPUT="${FOLDER}/${TIMESTAMP}\_frame_%04d_cam_$((i+CAMSTART)).${PICFORMAT}"
 
         # add file location to gst command
         TEMP="${TEMP} ! multifilesink location=${OUTPUT}"
