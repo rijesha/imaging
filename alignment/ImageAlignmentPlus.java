@@ -12,6 +12,7 @@ import ij.plugin.*;
 import ij.IJ;
 import ij.io.DirectoryChooser;
 import ij.io.OpenDialog;
+import ij.io.FileSaver;
 
 import java.io.*;
 import java.util.*;
@@ -23,6 +24,7 @@ public class ImageAlignmentPlus implements PlugIn {
 	HashMap<Integer, String> stackNames = new HashMap<Integer, String>();
 	
 	public static int		stackCount 		= 0;
+	public static int		frameCount 		= 0;
 	public static String	transMatFile	= "";
 	
 	/**
@@ -47,6 +49,8 @@ public class ImageAlignmentPlus implements PlugIn {
 		// create folder for saving resulting images
 		String newDir = location + "/aligned";
 		File dir = new File(newDir);
+		dir.mkdir();
+		dir = new File(newDir + "/tiffs" );
 		dir.mkdir();
 
 		// show dialog box and select transformation matrix file if exists
@@ -110,8 +114,9 @@ public class ImageAlignmentPlus implements PlugIn {
 	 */
 	private void getTransformationMatrix(String sourceDir, String filter) {
 		// open image sequence as stack
-		String cmd = "open=[" + sourceDir + "] file=" + filter + " sort";
+		String cmd = "open=[" + sourceDir + "] file=" + filter + "_ sort";
 		IJ.run("Image Sequence...", cmd);
+		IJ.log(cmd);
 		ImagePlus imp = IJ.getImage();
 		
 		// build command
@@ -141,10 +146,9 @@ public class ImageAlignmentPlus implements PlugIn {
 	 */
 	private void align(String sourceDir, String filter, String outputDir) {
 		// open image sequence as stack
-		String cmd = "open=[" + sourceDir + "] file=" + filter + " sort";
+		String cmd = "open=[" + sourceDir + "] file=" + filter + "_ sort";
 		IJ.run("Image Sequence...", cmd);
 		ImagePlus imp = IJ.getImage();
-		
 		// build command depending on the existence of a transformation matrix file (transMatFile)
 		String[] segments = sourceDir.split("/");
 		String idStr = segments[segments.length-1];
@@ -153,14 +157,21 @@ public class ImageAlignmentPlus implements PlugIn {
 			+ "action_1=[Load Transformation File] "
 			+ "file_1=[" + transMatFile + "] "
 			+ "stack_2=None action_2=Ignore file_2=[] "
-			+ "transformation=[Scaled Rotation]";
+			+ "transformation=[Scaled Rotation]"
+			+ "save";
 
 		// run MultiStackReg
+		IJ.log(cmd);
 		IJ.run(imp, "MultiStackReg", cmd);
 		
 		// save stack as image sequence
 		cmd = "format=PNG start=1 use save=[" + outputDir + "]";
 		IJ.run(imp, "Image Sequence... ", cmd);
+
+		//save stack as tiff
+		FileSaver FS = new FileSaver(imp);
+		FS.saveAsTiff("/" + outputDir + "/tiffs/frame_" + frameCount +".tiff");
+		frameCount++;
 
 		// close stack window
 		imp.close();

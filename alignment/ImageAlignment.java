@@ -11,6 +11,7 @@ import ij.plugin.*;
 
 import ij.IJ;
 import ij.io.DirectoryChooser;
+import ij.io.FileSaver;
 
 import java.io.*;
 import java.util.Arrays;
@@ -104,6 +105,11 @@ public class ImageAlignment implements PlugIn {
 		IJ.run(imp, "StackReg ", "transformation=[Scaled Rotation]");
 		cmd = "format=PNG start=1 use save=[" + outputDir + "]";
 		IJ.run(imp, "Image Sequence... ", cmd);
+		imp.show();
+		FileSaver FS = new FileSaver(imp);
+		FS.saveAsTiff(outputDir + "test.tiff");
+		FS.saveAsTiffStack(outputDir + "testStack.tiff");
+		
 		imp.close();
 	}
 
